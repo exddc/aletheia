@@ -179,94 +179,96 @@
 <svelte:window onkeydown={handleKeyDown} />
 
 <div class="flex flex-col justify-center items-center min-h-screen gap-8">
-	<div id="top-bar" class="w-full h-16 grid grid-cols-3 justify-center items-center px-8 top-0 absolute">
-		<span class="text-xl text-primary text-left">
-			Aletheia
-		</span>
-		<div class="text-2xl font-mono font-bold text-primary text-center">
-			{formatTime(elapsedTime)}
+	<div class="flex flex-col justify-center items-center h-screen gap-8">
+		<div id="top-bar" class="w-full h-16 grid grid-cols-3 justify-center items-center px-8 top-0 absolute">
+			<span class="text-xl text-primary text-left">
+				Aletheia
+			</span>
+			<div class="text-2xl font-mono font-bold text-primary text-center">
+				{formatTime(elapsedTime)}
+			</div>
+			<a href="/login" class="text-xl text-primary text-right">Login</a>
 		</div>
-		<a href="/login" class="text-xl text-primary text-right">Login</a>
-	</div>
-	<div class="flex flex-col justify-center items-center gap-8 w-full">
-		{#if isComplete}
-			<div class="text-center max-w-2xl">
-				<div class="text-4xl font-bold text-primary mb-8">Complete! 🎉</div>
-				
-				<!-- Main Stats Grid -->
-				<div class="grid grid-cols-2 gap-6 mb-8">
-					<!-- WPM -->
-					<div class="bg-secondary p-6 rounded-xl border-2 border-primary">
-						<div class="text-5xl font-bold text-primary mb-2">{calculateWPM()}</div>
-						<div class="text-sm uppercase tracking-wider text-foreground/60">WPM</div>
+		<div class="flex flex-col justify-center items-center gap-8 w-full pb-24">
+			{#if isComplete}
+				<div class="text-center max-w-2xl">
+					<div class="text-4xl font-bold text-primary mb-8">Complete! 🎉</div>
+					
+					<!-- Main Stats Grid -->
+					<div class="grid grid-cols-2 gap-6 mb-8">
+						<!-- WPM -->
+						<div class="bg-secondary p-6 rounded-xl border-2 border-primary">
+							<div class="text-5xl font-bold text-primary mb-2">{calculateWPM()}</div>
+							<div class="text-sm uppercase tracking-wider text-foreground/60">WPM</div>
+						</div>
+						
+						<!-- Accuracy -->
+						<div class="bg-secondary p-6 rounded-xl border-2 border-accent">
+							<div class="text-5xl font-bold text-accent mb-2">{calculateAccuracy()}%</div>
+							<div class="text-sm uppercase tracking-wider text-foreground/60">Accuracy</div>
+						</div>
 					</div>
 					
-					<!-- Accuracy -->
-					<div class="bg-secondary p-6 rounded-xl border-2 border-accent">
-						<div class="text-5xl font-bold text-accent mb-2">{calculateAccuracy()}%</div>
-						<div class="text-sm uppercase tracking-wider text-foreground/60">Accuracy</div>
+					<!-- CPM Over Time Chart -->
+					<CPMChart data={getCPMData()} />
+					
+					<!-- Word Performance Visualization -->
+					<WordPerformanceViz words={getWordPerformance()} />
+					
+					<!-- Detailed Stats -->
+					<div class="bg-secondary p-6 rounded-xl mb-6 space-y-3">
+						<div class="flex justify-between items-center">
+							<span class="text-foreground/70">Time</span>
+							<span class="font-mono font-bold text-foreground">{formatTime(elapsedTime)}</span>
+						</div>
+						<div class="flex justify-between items-center">
+							<span class="text-foreground/70">Characters per Minute</span>
+							<span class="font-mono font-bold text-foreground">{calculateCPM()}</span>
+						</div>
+						<div class="flex justify-between items-center">
+							<span class="text-foreground/70">Correct on First Try</span>
+							<span class="font-mono font-bold text-primary">{correctFirstTry} / {text.length}</span>
+						</div>
+						<div class="flex justify-between items-center">
+							<span class="text-foreground/70">Total Errors</span>
+							<span class="font-mono font-bold text-destructive">{errorCount}</span>
+						</div>
+					{#if getCPMData().length > 0}
+						{@const flowPoints = getCPMData().filter(d => d.inFlow).length}
+						{@const totalPoints = getCPMData().length}
+						{@const flowPercentage = Math.round((flowPoints / totalPoints) * 100)}
+						<div class="flex justify-between items-center">
+							<span class="text-foreground/70">Time in Flow</span>
+							<span class="font-mono font-bold text-accent">{flowPercentage}%</span>
+						</div>
+					{/if}
 					</div>
+					
+					<button 
+						onclick={reset}
+						class="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-medium text-lg hover:opacity-90 transition-opacity"
+					>
+						Try Again
+					</button>
 				</div>
-				
-				<!-- CPM Over Time Chart -->
-				<CPMChart data={getCPMData()} />
-				
-				<!-- Word Performance Visualization -->
-				<WordPerformanceViz words={getWordPerformance()} />
-				
-				<!-- Detailed Stats -->
-				<div class="bg-secondary p-6 rounded-xl mb-6 space-y-3">
-					<div class="flex justify-between items-center">
-						<span class="text-foreground/70">Time</span>
-						<span class="font-mono font-bold text-foreground">{formatTime(elapsedTime)}</span>
-					</div>
-					<div class="flex justify-between items-center">
-						<span class="text-foreground/70">Characters per Minute</span>
-						<span class="font-mono font-bold text-foreground">{calculateCPM()}</span>
-					</div>
-					<div class="flex justify-between items-center">
-						<span class="text-foreground/70">Correct on First Try</span>
-						<span class="font-mono font-bold text-primary">{correctFirstTry} / {text.length}</span>
-					</div>
-					<div class="flex justify-between items-center">
-						<span class="text-foreground/70">Total Errors</span>
-						<span class="font-mono font-bold text-destructive">{errorCount}</span>
-					</div>
-				{#if getCPMData().length > 0}
-					{@const flowPoints = getCPMData().filter(d => d.inFlow).length}
-					{@const totalPoints = getCPMData().length}
-					{@const flowPercentage = Math.round((flowPoints / totalPoints) * 100)}
-					<div class="flex justify-between items-center">
-						<span class="text-foreground/70">Time in Flow</span>
-						<span class="font-mono font-bold text-accent">{flowPercentage}%</span>
-					</div>
-				{/if}
+			{:else}
+				<div class="text-lg text-foreground/60 font-medium uppercase tracking-widest">
+					Start the timer by typing the text below
 				</div>
-				
-				<button 
-					onclick={reset}
-					class="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-medium text-lg hover:opacity-90 transition-opacity"
-				>
-					Try Again
-				</button>
+			{/if}
+			
+			<div class="text-2xl font-mono leading-relaxed text-center max-w-4xl">
+				{#each text.split('') as char, index}
+					{#if index < currentIndex}
+						<span class="text-primary">{char}</span>
+					{:else if index === currentIndex}
+						<span class="bg-accent text-accent-foreground">{char}</span>
+					{:else}
+						<span class="text-foreground/30">{char}</span>
+					{/if}
+				{/each}
 			</div>
-		{:else}
-			<div class="text-lg text-foreground/60 font-medium uppercase tracking-widest">
-				Start the timer by typing the text below
-			</div>
-		{/if}
-		
-		<div class="text-2xl font-mono leading-relaxed text-center max-w-4xl">
-			{#each text.split('') as char, index}
-				{#if index < currentIndex}
-					<span class="text-primary">{char}</span>
-				{:else if index === currentIndex}
-					<span class="bg-accent text-accent-foreground">{char}</span>
-				{:else}
-					<span class="text-foreground/30">{char}</span>
-				{/if}
-			{/each}
 		</div>
+		<Keyboard class="absolute bottom-4" />
 	</div>
-	<Keyboard />
 </div>

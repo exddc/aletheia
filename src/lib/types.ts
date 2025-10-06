@@ -9,3 +9,12 @@ export interface WordPerformance {
     avgCPM: number;
     performance: 'excellent' | 'good' | 'average' | 'slow';
 }
+
+export type Key = {
+    code: string;
+    label: string;
+    shiftLabel?: string;
+    size?: number;
+    align?: 'left' | 'right' | 'center';
+    symbol?: string;
+};
